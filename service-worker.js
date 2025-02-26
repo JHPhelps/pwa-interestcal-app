@@ -1,12 +1,13 @@
 self.addEventListener("install", event => {
     event.waitUntil(
-        caches.open("app-cache").then(cache => {
+        caches.open("pwa-cache-v1").then(cache => {
             return cache.addAll([
-                "/",
-                "/index.html",
-                "/manifest.json",
-                "/style.css",
-                "/script.js"
+                "/pwa-interestcal-app/",
+                "/pwa-interestcal-app/index.html",
+                "/pwa-interestcal-app/styles.css",
+                "/pwa-interestcal-app/script.js",
+                "/pwa-interestcal-app/icons/icon-192x192.png",
+                "/pwa-interestcal-app/icons/icon-512x512.png"
             ]);
         })
     );
