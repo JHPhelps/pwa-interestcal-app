@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="icon-192x192.png">
+
+    <meta charset="UTF-8">
+    <title>综合计算器</title>
+    <style>
+        .container { max-width: 800px; margin: 20px auto; padding: 20px; }
+        .section { background: #f5f5f5; padding: 20px; border-radius: 10px; margin: 20px 0; }
+        .input-group { margin: 10px 0; }
+        .hidden { display: none; }
+        input[type="number"] { width: 80px; margin-right: 10px; }
+        #financeResult, .calc-history { margin-top: 20px; padding: 10px; background: #e0e0e0; }
+
+        /* 金融计算器样式 */
+        .finance-calc { background: #f0f8ff; }
+        
+        /* 简易计算器样式 */
+        #basicCalc { background: #fff; }
+        #calcDisplay {
+            width: 100%;
+            height: 60px;
+            margin-bottom: 15px;
+            font-size: 24px;
+            text-align: right;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        .calc-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+        .calc-btn {
+            padding: 15px;
+            font-size: 18px;
+            border: 1px solid #ddd;
+            background: #f8f8f8;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .operator { background: #ff9500; color: white; }
+        .equals { background: #007AFF; color: white; }
+
+        /* 历史记录 */
+        .history-table { 
+            width: 100%; 
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        .history-table th, 
+        .history-table td { 
+            padding: 8px; 
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 利息利率计算器 -->
+        <div class="section finance-calc">
+            <h2>利息利率计算器</h2>
+            <div class="input-group">
+                <label>计算模式：</label>
+                <select id="mode" onchange="toggleFinanceFields()">
+                    <option value="interest">计算利息和天数</option>
+                    <option value="rate">计算利率和天数</option>
+                    <option value="date">计算取款日期和天数</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label>存款日期：</label>
+                <input type="number" id="dYear" placeholder="年" min="2000" max="2100">
+                <input type="number" id="dMonth" placeholder="月" min="1" max="12">
+                <input type="number" id="dDay" placeholder="日" min="1" max="31">
+            </div>
+
+            <div id="withdrawalFields" class="input-group">
+                <label>取款日期：</label>
+                <input type="number" id="wYear" placeholder="年" min="2000" max="2100">
+                <input type="number" id="wMonth" placeholder="月" min="1" max="12">
+                <input type="number" id="wDay" placeholder="日" min="1" max="31">
+            </div>
+
+            <div class="input-group">
+                <label>本金：</label>
+                <input type="number" id="principal" step="100" min="0">
+            </div>
+
+            <div id="rateField" class="input-group">
+                <label>年利率(%)：</label>
+                <input type="number" id="rate" step="0.01" min="0">
+            </div>
+
+            <div id="interestField" class="input-group hidden">
+                <label>利息：</label>
+                <input type="number" id="interest" step="0.01" min="0">
+            </div>
+
+            <button onclick="calculateFinance()">开始计算</button>
+            <div id="financeResult"></div>
+            
+            <div class="calc-history">
+                <h3>金融计算记录</h3>
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>模式</th>
+                            <th>本金</th>
+                            <th>利率(%)</th>
+                            <th>利息</th>
+                            <th>天数</th>
+                            <th>存款日期</th>
+                            <th>取款日期</th>
+                        </tr>
+                    </thead>
+                    <tbody id="financeHistoryBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 简易四则运算计算器 -->
+        <div class="section" id="basicCalc">
+            <h2>简易计算器</h2>
+            <input type="text" id="calcDisplay" readonly>
+            <div class="calc-buttons">
+                <button class="calc-btn" onclick="clearDisplay()">C</button>
+                <button class="calc-btn operator" onclick="appendOperator('/')">/</button>
+                <button class="calc-btn operator" onclick="appendOperator('*')">×</button>
+                <button class="calc-btn operator" onclick="appendOperator('-')">-</button>
+                
+                <button class="calc-btn" onclick="appendNumber('7')">7</button>
+                <button class="calc-btn" onclick="appendNumber('8')">8</button>
+                <button class="calc-btn" onclick="appendNumber('9')">9</button>
+                <button class="calc-btn operator" onclick="appendOperator('+')">+</button>
+                
+                <button class="calc-btn" onclick="appendNumber('4')">4</button>
+                <button class="calc-btn" onclick="appendNumber('5')">5</button>
+                <button class="calc-btn" onclick="appendNumber('6')">6</button>
+                <button class="calc-btn" onclick="appendDecimal()">.</button>
+                
+                <button class="calc-btn" onclick="appendNumber('1')">1</button>
+                <button class="calc-btn" onclick="appendNumber('2')">2</button>
+                <button class="calc-btn" onclick="appendNumber('3')">3</button>
+                <button class="calc-btn equals" onclick="calculateResult()" style="grid-row: span 2">=</button>
+                
+                <button class="calc-btn" onclick="appendNumber('0')" style="grid-column: span 2">0</button>
+                <button class="calc-btn" onclick="appendNumber('00')">00</button>
+            </div>
+
+            <div class="calc-history">
+                <h3>计算记录</h3>
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>序号</th>
+                            <th>计算式</th>
+                            <th>结果</th>
+                            <th>时间</th>
+                        </tr>
+                    </thead>
+                    <tbody id="basicCalcHistory"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+
+	if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/service-worker.js')
+        .then(() => console.log("Service Worker Registered"));
+}
+
+        // ================= 利息计算器逻辑 =================
+        let financeHistory = [];
+
+        function toggleFinanceFields() {
+            const mode = document.getElementById('mode').value;
+            document.getElementById('withdrawalFields').style.display = 
+                mode === 'date' ? 'none' : 'block';
+            document.getElementById('rateField').style.display = 
+                mode === 'rate' ? 'none' : 'block';
+            document.getElementById('interestField').style.display = 
+                mode === 'interest' ? 'none' : 'block';
+        }
+
+        function isValidDate(y, m, d) {
+            const date = new Date(y, m-1, d);
+            return date.getFullYear() === y && 
+                   date.getMonth() === m-1 && 
+                   date.getDate() === d;
+        }
+
+        function getDays(d1, d2) {
+            return Math.round((d2 - d1) / (1000 * 60 * 60 * 24));
+        }
+
+        function addFinanceHistory(record) {
+            financeHistory.unshift(record);
+            if(financeHistory.length > 10) financeHistory.pop();
+            updateFinanceHistory();
+        }
+
+        function updateFinanceHistory() {
+            const tbody = document.getElementById('financeHistoryBody');
+            tbody.innerHTML = financeHistory.map(record => `
+                <tr>
+                    <td>${record.mode}</td>
+                    <td>¥${record.principal}</td>
+                    <td>${record.rate ? record.rate+'%' : ''}</td>
+                    <td>¥${record.interest || ''}</td>
+                    <td>${record.days || ''}天</td>
+                    <td>${record.depositDate}</td>
+                    <td>${record.withdrawalDate || ''}</td>
+                </tr>
+            `).join('');
+        }
+
+        function calculateFinance() {
+            const mode = document.getElementById('mode').value;
+            const principalInput = document.getElementById('principal').value;
+            
+            if (!principalInput) {
+                alert("请输入本金");
+                return;
+            }
+            const principal = parseFloat(principalInput);
+
+            // 存款日期验证
+            const dYear = parseInt(document.getElementById('dYear').value);
+            const dMonth = parseInt(document.getElementById('dMonth').value);
+            const dDay = parseInt(document.getElementById('dDay').value);
+            
+            if(!isValidDate(dYear, dMonth, dDay)) {
+                alert("请输入有效的存款日期");
+                return;
+            }
+            const depositDate = new Date(dYear, dMonth-1, dDay);
+
+            try {
+                let resultText = '';
+                switch(mode) {
+                    case 'interest': {
+                        const wYear = parseInt(document.getElementById('wYear').value);
+                        const wMonth = parseInt(document.getElementById('wMonth').value);
+                        const wDay = parseInt(document.getElementById('wDay').value);
+                        const rate = parseFloat(document.getElementById('rate').value);
+                        
+                        if(!isValidDate(wYear, wMonth, wDay)) throw new Error("无效的取款日期");
+                        if(rate <= 0) throw new Error("利率必须大于0");
+                        
+                        const withdrawalDate = new Date(wYear, wMonth-1, wDay);
+                        const days = getDays(depositDate, withdrawalDate);
+                        const interest = principal * rate * days / 36500;
+                        
+                        resultText = `存款天数：${days}天，应得利息：¥${interest.toFixed(2)}`;
+                        addFinanceHistory({
+                            mode: '计算利息',
+                            principal: principal.toFixed(2),
+                            rate: rate.toFixed(2),
+                            interest: interest.toFixed(2),
+                            days: days,
+                            depositDate: depositDate.toISOString().split('T')[0],
+                            withdrawalDate: withdrawalDate.toISOString().split('T')[0]
+                        });
+                        break;
+                    }
+
+                    case 'rate': {
+                        const wYear = parseInt(document.getElementById('wYear').value);
+                        const wMonth = parseInt(document.getElementById('wMonth').value);
+                        const wDay = parseInt(document.getElementById('wDay').value);
+                        const interestVal = parseFloat(document.getElementById('interest').value);
+                        
+                        if(!isValidDate(wYear, wMonth, wDay)) throw new Error("无效的取款日期");
+                        
+                        const wDate = new Date(wYear, wMonth-1, wDay);
+                        const days = getDays(depositDate, wDate);
+                        const realRate = (interestVal * 36500) / (principal * days);
+                        
+                        resultText = `存款天数：${days}天，实际利率：${realRate.toFixed(2)}%`;
+                        addFinanceHistory({
+                            mode: '计算利率',
+                            principal: principal.toFixed(2),
+                            rate: realRate.toFixed(2),
+                            interest: interestVal.toFixed(2),
+                            days: days,
+                            depositDate: depositDate.toISOString().split('T')[0],
+                            withdrawalDate: wDate.toISOString().split('T')[0]
+                        });
+                        break;
+                    }
+
+                    case 'date': {
+                        const rate = parseFloat(document.getElementById('rate').value);
+                        const interest = parseFloat(document.getElementById('interest').value);
+                        
+                        if(rate <= 0) throw new Error("利率必须大于0");
+                        if(interest <= 0) throw new Error("利息必须大于0");
+                        
+                        const days = Math.round((interest * 36500) / (principal * rate));
+                        const withdrawalDate = new Date(depositDate);
+                        withdrawalDate.setDate(depositDate.getDate() + days);
+                        
+                        resultText = `需要存款天数：${days}天，取款日期：${
+                            withdrawalDate.getFullYear()}-${(withdrawalDate.getMonth()+1)
+                            .toString().padStart(2,'0')}-${withdrawalDate.getDate()
+                            .toString().padStart(2,'0')}`;
+                        addFinanceHistory({
+                            mode: '计算日期',
+                            principal: principal.toFixed(2),
+                            rate: rate.toFixed(2),
+                            interest: interest.toFixed(2),
+                            days: days,
+                            depositDate: depositDate.toISOString().split('T')[0],
+                            withdrawalDate: withdrawalDate.toISOString().split('T')[0]
+                        });
+                        break;
+                    }
+                }
+                document.getElementById('financeResult').innerHTML = resultText;
+            } catch(e) {
+                alert("计算错误: " + e.message);
+            }
+        }
+
+        // ================= 基础计算器逻辑 =================
+        let basicCalcHistory = [];
+        let calculationId = 1;
+        let currentInput = '0';
+        let firstOperand = null;
+        let operator = null;
+        let waitingForSecondOperand = false;
+
+        function updateDisplay() {
+            document.getElementById('calcDisplay').value = currentInput;
+        }
+
+        function appendNumber(num) {
+            if (waitingForSecondOperand) {
+                currentInput = num;
+                waitingForSecondOperand = false;
+            } else {
+                currentInput = currentInput === '0' ? num : currentInput + num;
+            }
+            updateDisplay();
+        }
+
+        function appendDecimal() {
+            if (!currentInput.includes('.')) {
+                currentInput += '.';
+                updateDisplay();
+            }
+        }
+
+        function appendOperator(nextOperator) {
+            const inputValue = parseFloat(currentInput);
+            
+            if (operator && waitingForSecondOperand) {
+                operator = nextOperator;
+                return;
+            }
+            
+            if (firstOperand === null) {
+                firstOperand = inputValue;
+            } else if (operator) {
+                const result = performCalculation();
+                currentInput = String(result);
+                firstOperand = result;
+            }
+            
+            operator = nextOperator;
+            waitingForSecondOperand = true;
+            updateDisplay();
+        }
+
+        function performCalculation() {
+            const secondOperand = parseFloat(currentInput);
+            if (isNaN(secondOperand)) return firstOperand;
+            
+            switch(operator) {
+                case '+': return firstOperand + secondOperand;
+                case '-': return firstOperand - secondOperand;
+                case '*': return firstOperand * secondOperand;
+                case '/': return secondOperand === 0 ? '错误' : firstOperand / secondOperand;
+                default: return secondOperand;
+            }
+        }
+
+        function calculateResult() {
+            const result = performCalculation();
+            let displayResult = result;
+            
+            if (result === '错误') {
+                currentInput = '错误';
+            } else {
+                const expression = `${firstOperand || ''} ${operator || ''} ${currentInput}`.replace(/\s+/g, ' ').trim();
+                displayResult = typeof result === 'number' ? result.toFixed(2) : result;
+                currentInput = displayResult;
+                
+                addCalcHistory(expression + ' =', displayResult);
+            }
+            
+            firstOperand = null;
+            operator = null;
+            waitingForSecondOperand = false;
+            updateDisplay();
+        }
+
+        function addCalcHistory(expression, result) {
+            basicCalcHistory.unshift({
+                id: calculationId++,
+                expression: expression,
+                result: result,
+                time: new Date().toLocaleString()
+            });
+            
+            if(basicCalcHistory.length > 10) {
+                basicCalcHistory.pop();
+            }
+            updateBasicCalcHistory();
+        }
+
+        function updateBasicCalcHistory() {
+            const tbody = document.getElementById('basicCalcHistory');
+            tbody.innerHTML = basicCalcHistory.map(record => `
+                <tr>
+                    <td>${record.id}</td>
+                    <td>${record.expression}</td>
+                    <td>${record.result}</td>
+                    <td>${record.time}</td>
+                </tr>
+            `).join('');
+        }
+
+        function clearDisplay() {
+            currentInput = '0';
+            firstOperand = null;
+            operator = null;
+            waitingForSecondOperand = false;
+            updateDisplay();
+        }
+    </script>
+</body>
+</html>
